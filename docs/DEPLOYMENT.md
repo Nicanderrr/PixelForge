@@ -116,7 +116,7 @@ The provider retries non-2xx responses/timeouts. No special public CORS policy i
 
 ## GitHub publication
 
-The local repository is prepared separately from all other workspace projects. Before publishing:
+The source repository is [Nicanderrr/PixelForge](https://github.com/Nicanderrr/PixelForge), prepared separately from all other workspace projects. Before pushing updates:
 
 ```sh
 git status --short
@@ -127,6 +127,6 @@ composer audit
 npm audit
 ```
 
-The two `git ls-files` commands must produce no output. Review staged files for credentials. Then create an empty public GitHub repository in the intended account, add its URL as `origin`, and push `main` using authorized GitHub credentials. Do not embed a personal token in the remote URL. No remote or public URL should be reported until actually created and verified.
+The two `git ls-files` commands must produce no output. Review staged files and commit history for credentials. Push `main` using authorized GitHub credentials; do not force-push over unrelated work or embed a personal token in the remote URL. Public application hosting is separate from publishing this source repository.
 
 GitHub Actions runs the backend suite against a disposable MySQL service and checks PHP formatting and the production build. Its service password is an intentionally disposable CI test value, not a real credential. Browser/live provider checks are manual because they require a running application and optional provider/tunnel setup.

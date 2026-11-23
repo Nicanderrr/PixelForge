@@ -11,8 +11,8 @@ PixelForge itself is simulated: its images are abstract placeholders and there a
 - Implemented: registration, session login/logout, account settings, dashboard, creation, history, detail pages, user isolation, live estimates, exact accounting, queues, signed webhook inbox, polling recovery, and provider usage reconciliation.
 - Verified locally: PHPUnit against isolated MariaDB, a production TypeScript/Vite build, Chrome registration/login/profile flow, mobile layout, and real unauthenticated `GET /v1/pricing`.
 - Real authenticated generation, successful and failed outcomes, slow processing, browser image display, reference token billing, and exact `/v1/usage` reconciliation have now been verified. See [live verification evidence](docs/LIVE-VALIDATION.md).
-- Provider-delivered webhook validation still awaits the development key's dashboard URL configuration. Polling was used for the completed live scenarios; duplicate prompts alone do not prove duplicate callback delivery.
-- Public deployment and GitHub publication require hosting/GitHub access and have not been completed.
+- Real signed `ping`, `generation.processing`, and `generation.succeeded` webhooks have been received and processed. Duplicate/out-of-order/concurrent handling is covered by automated tests; live duplicate delivery has not been separately observed.
+- Submission repository: [Nicanderrr/PixelForge](https://github.com/Nicanderrr/PixelForge). Public application deployment remains outstanding.
 - Bonus admin reporting and wallets are intentionally deferred until live core validation is complete. There is no real payment collection; “charge” means an immutable accounting record.
 
 See [validation notes](docs/VALIDATION.md) for evidence and limitations, [API implementation decisions](docs/API-PLAN.md), and [interview preparation](docs/INTERVIEW.md).
@@ -46,7 +46,7 @@ powershell -ExecutionPolicy Bypass -File scripts\start-local.ps1
 
 The launcher refuses to replace a process already listening on 8030. Logs and process IDs are in `.runtime`. Local `queue:listen` starts each job with fresh configuration, so a newly pasted API key is picked up without a long-lived worker restart. Refresh the Create Image page after setting the key. Avoid `config:cache` during local development.
 
-Browser smoke testing creates test-only local accounts with addresses beginning `browser-` at `example.test`. Real provider verification uses `live-verification@example.test`; its random local password is stored only in ignored `.runtime/reviewer.json`. Its history contains genuine provider results. No production users or fabricated sample images are seeded.
+Browser smoke testing creates test-only local accounts with addresses beginning `browser-` at `example.test`. Real provider verification uses a separate local reviewer account; its current credentials are stored only in ignored `.runtime/reviewer.json`. Its history contains genuine provider results. No production users or fabricated sample images are seeded. Register a fresh account on a new installation.
 
 ## Fresh installation on another machine
 
@@ -197,4 +197,4 @@ See [deployment runbook](docs/DEPLOYMENT.md). Public deployment needs a configur
 - Provider keys are environment configuration, not per-user credentials. Old-key requests require the original key for polling recovery.
 - One in-flight provider HTTP call per account favors understandable correctness over maximum throughput. Limits are shared across nodes only if they share the database cache and scope.
 - Ledger triggers and the verified concurrency suite target MySQL/MariaDB.
-- Public deployment, GitHub publication, and provider-delivered webhook verification remain external setup tasks until the relevant access/configuration is available.
+- Public application deployment and verification in the deployed environment remain outstanding. The development webhook tunnel is temporary.

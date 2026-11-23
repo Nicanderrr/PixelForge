@@ -40,14 +40,32 @@ The command exited successfully. This is a real-provider reconciliation, separat
 
 The opt-in Playwright live test signed into the reviewer account, submitted a real request through the app, waited for final status, loaded the returned image, verified its natural width of 1024, checked reference-image usage, and exposed the exact accounting amounts. It passed in approximately two minutes while the other smoke scenarios were running.
 
-The local reviewer account is `live-verification@example.test`. Its random password is available only in ignored `.runtime/reviewer.json`; it is not a shared production credential. Screenshot evidence is saved at ignored `test-results/live-generation.png`.
+The local reviewer account was renamed at the user's request after testing. Its current credentials are available only in ignored `.runtime/reviewer.json`; they are not seeded or required by a new installation. Screenshot evidence is saved at ignored `test-results/live-generation.png`.
 
 ## Callback boundary
 
-At the last observation, the provider webhook inbox was empty. Completed live generations were finalized through documented polling. The `[duplicate]` keyword requests duplicate delivery from PixelForge, but it does **not** establish that callbacks were received.
+The initial smoke scenarios completed through documented polling before webhook configuration. After the user configured the key's dashboard URL, the following real events were received and successfully processed on 2026-11-23 UTC:
 
-A temporary Cloudflare tunnel to the webhook-only relay was created and its public `/health` endpoint returned HTTP 200. The relay exposes no application pages or development exception bodies. The user still needs to configure the key's dashboard webhook URL and send a test event, followed by another duplicate scenario or resending recorded provider events.
+- `ping`, processed at 23:20:20.
+- `generation.processing`, processed at 23:23:42.
+- `generation.succeeded`, processed at 23:23:58.
+
+All three inbox entries have no failure/error markers. The signature-verifying public endpoint accepted them and the queue processed them. Duplicate, out-of-order, and concurrent behavior remains supported by automated tests; live duplicate delivery has not been separately observed.
+
+A temporary Cloudflare tunnel to the webhook-only relay was created and its public `/health` endpoint returned HTTP 200. An unsigned webhook returned 400 and a non-webhook route returned 404. The relay exposes no application pages or development exception bodies.
 
 An attempt to inspect the signed-in provider dashboard using Windows computer use was stopped by the tool's safety check because it could not determine the current browser URL. No dashboard settings were changed through that session.
 
-The temporary tunnel is development infrastructure, not a durable production deployment. Public hosting and GitHub publication remain outstanding.
+The temporary tunnel is development infrastructure, not a durable production deployment. Public application hosting remains outstanding. The submission source repository is https://github.com/Nicanderrr/PixelForge.
+
+## Latest reconciliation after the user tested the app
+
+A fourth successful generation added provider cost 0.049817500 USD and customer charge 0.062271875 USD. The new totals were checked against the real `/v1/usage` report:
+
+```text
+Local provider cost: 0.101797500000000000 USD
+PixelForge reported: 0.101797500 USD
+Difference:         0.000000000000000000 USD
+Customer charges:   0.127246875000000000 USD
+Ledger entries:     4 (one per successful generation)
+```

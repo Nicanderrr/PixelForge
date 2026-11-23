@@ -10,7 +10,8 @@ PixelForge itself is simulated: its images are abstract placeholders and there a
 
 - Implemented: registration, session login/logout, account settings, dashboard, creation, history, detail pages, user isolation, live estimates, exact accounting, queues, signed webhook inbox, polling recovery, and provider usage reconciliation.
 - Verified locally: PHPUnit against isolated MariaDB, a production TypeScript/Vite build, Chrome registration/login/profile flow, mobile layout, and real unauthenticated `GET /v1/pricing`.
-- Real authenticated generation, provider-delivered webhooks, and real usage reconciliation require a development API key. They have **not** been verified without it.
+- Real authenticated generation, successful and failed outcomes, slow processing, browser image display, reference token billing, and exact `/v1/usage` reconciliation have now been verified. See [live verification evidence](docs/LIVE-VALIDATION.md).
+- Provider-delivered webhook validation still awaits the development key's dashboard URL configuration. Polling was used for the completed live scenarios; duplicate prompts alone do not prove duplicate callback delivery.
 - Public deployment and GitHub publication require hosting/GitHub access and have not been completed.
 - Bonus admin reporting and wallets are intentionally deferred until live core validation is complete. There is no real payment collection; “charge” means an immutable accounting record.
 
@@ -30,7 +31,7 @@ Exact dependency versions are pinned in `composer.lock` and `package-lock.json`.
 
 Project directory: `C:\xampp\htdocs\promptedit-pixelforge`.
 
-The local `.env` is already configured, including the generated Laravel key and unique database credentials. It is ignored by Git. The new database runs on **127.0.0.1:3308**, uses databases `forma` and `forma_test`, and has its files and binaries under the ignored `.runtime` directory. Existing XAMPP databases and applications are untouched.
+The local `.env` is already configured, including the generated Laravel key, unique database credentials, and the development PixelForge credentials supplied by the user. It is ignored by Git. The new database runs on **127.0.0.1:3308**, uses databases `forma` and `forma_test`, and has its files and binaries under the ignored `.runtime` directory. Existing XAMPP databases and applications are untouched.
 
 1. Open `.env` and fill in `PIXELFORGE_API_KEY=` with your dedicated development key.
 2. For webhooks, also fill in `PIXELFORGE_WEBHOOK_SECRET=` with that key’s signing secret (not an invented value).
@@ -45,7 +46,7 @@ powershell -ExecutionPolicy Bypass -File scripts\start-local.ps1
 
 The launcher refuses to replace a process already listening on 8030. Logs and process IDs are in `.runtime`. Local `queue:listen` starts each job with fresh configuration, so a newly pasted API key is picked up without a long-lived worker restart. Refresh the Create Image page after setting the key. Avoid `config:cache` during local development.
 
-Browser smoke testing creates test-only local accounts with addresses beginning `browser-` at `example.test`. No production users or sample generations are seeded.
+Browser smoke testing creates test-only local accounts with addresses beginning `browser-` at `example.test`. Real provider verification uses `live-verification@example.test`; its random local password is stored only in ignored `.runtime/reviewer.json`. Its history contains genuine provider results. No production users or fabricated sample images are seeded.
 
 ## Fresh installation on another machine
 
@@ -145,6 +146,8 @@ https://YOUR-PUBLIC-TUNNEL/webhooks/pixelforge
 
 Forward the tunnel to port 8030. PixelForge rejects private/localhost webhook URLs. Copy the signing secret for **that same API key** to `.env`. Polling still works without a tunnel; it does not prove webhook delivery works.
 
+For a development tunnel that exposes only callbacks, run `node scripts/webhook-relay.mjs` and point the tunnel at `http://127.0.0.1:8031`. The relay forwards only `POST /webhooks/pixelforge` to port 8030, preserves raw bytes/signature headers, and suppresses upstream response bodies. `/health` is a plain readiness check; all other routes return 404. The Laravel endpoint remains the sole signature verifier. A temporary Cloudflare Quick Tunnel was prepared during live verification; its URL is not a production deployment.
+
 The route is excluded from CSRF protection. Before JSON decoding, it verifies `Pixelforge-Signature: t=...,v1=...` as hex HMAC-SHA256 over `timestamp.raw_body`, uses `hash_equals`, and requires the timestamp within ±300 seconds. Blank secrets fail closed. Request size, envelope, status/type agreement, and optional header identities are checked.
 
 Events are persisted in a durable inbox before returning 204. The event primary key deduplicates delivery; a body hash detects conflicting reuse. Processing is queued. Event and generation row locks plus a unique charge constraint cover concurrent delivery, different success event IDs, and polling races. Terminal states never regress. Unknown historical records are acknowledged without changing user data. Invalid snapshots are quarantined; permanent errors are not retried forever. The scheduler recovers unprocessed inbox rows for 24 hours. Inspect `webhook_events.failed_at/error_code` and logs for quarantined/exhausted events; correct the cause and replay the event deliberately. Keep host clocks synchronized.
@@ -161,6 +164,8 @@ npx playwright test
 `phpunit.xml` uses `forma_test`, with credentials inherited from `.env`. Tests exercise real MySQL transactions and triggers. `ConcurrencyTest` launches four independent PHP processes against the same generation/event rows. HTTP contract tests use documented fixtures and block stray network requests. They are **not** represented as real-provider validation.
 
 Playwright requires Chrome (or change its configured channel to an installed Chromium). It uses the running app on 8030, creates a local test account, and calls the real public pricing endpoint. It does not submit billable generations. Screenshots and traces stay in ignored `test-results`.
+
+The separate `tests/Browser/live.spec.ts` is skipped by default. It was executed with `RUN_PIXELFORGE_LIVE=1` against the real provider, using the ignored reviewer credential file. This opt-in test does submit one new generation and verifies its image dimensions, actual charge, and 765 reference-image input tokens.
 
 Once the key is configured, register a user and run:
 
@@ -192,4 +197,4 @@ See [deployment runbook](docs/DEPLOYMENT.md). Public deployment needs a configur
 - Provider keys are environment configuration, not per-user credentials. Old-key requests require the original key for polling recovery.
 - One in-flight provider HTTP call per account favors understandable correctness over maximum throughput. Limits are shared across nodes only if they share the database cache and scope.
 - Ledger triggers and the verified concurrency suite target MySQL/MariaDB.
-- Public deployment, GitHub publication, and live authenticated smoke verification remain external setup tasks until access is available.
+- Public deployment, GitHub publication, and provider-delivered webhook verification remain external setup tasks until the relevant access/configuration is available.

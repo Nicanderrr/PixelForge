@@ -295,8 +295,7 @@ const prompts = [
             type="button"
             @click="form.prompt = prompt.text"
           >
-            <span>{{ prompt.label }}</span
-            ><ArrowUpRight :size="16" />
+            <span>{{ prompt.label }}</span><ArrowUpRight :size="16" />
           </button>
           <p>Pick a thought, then make it your own.</p>
         </section>

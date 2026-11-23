@@ -18,19 +18,21 @@ Local validation date: 2026-11-23. Workspace: new `C:\xampp\htdocs\promptedit-pi
 - Production route and Blade-view cache compilation succeeded; caches were cleared afterward so local configuration remains editable.
 - `vendor/bin/pint --test` passed. Staged files were checked against the actual local secret values without printing them; `.env`, runtime databases, logs, screenshots and dependencies are excluded from Git.
 
-## Not yet verified externally
+## Real provider verification added
 
-- No authenticated real generation request was sent without the user’s PixelForge key.
-- No provider-delivered callback has been observed without a public tunnel and matching signing secret.
-- Real provider usage reconciliation has not run without that key.
-- The successful/failed images and cost scenarios in PHPUnit use contract fixtures, not a live-provider claim.
+- After the user configured the key and signing secret, real authentication, generation, failure, slow completion, reference billing, browser image display, and usage reconciliation passed. Full evidence: [LIVE-VALIDATION.md](LIVE-VALIDATION.md).
+- A public webhook-only tunnel returned HTTP 200 at its readiness endpoint. No provider-delivered callback has been observed yet; the key's dashboard callback URL must be configured.
+- PHPUnit scenarios still use isolated contract fixtures. The separate opt-in browser test was executed against the actual provider.
+
+## Not yet deployed/published
+
 - No public deployment URL exists from this work yet.
 - No GitHub repository has been published from this work yet.
 
 ## Operational notes
 
-The local `.env` has correct app, database, session, and queue configuration, plus blank provider secrets for the user to fill. Local browser tests created `browser-…@example.test` accounts only. No demo images or fabricated provider records were inserted into the application database.
+The local `.env` has correct app, database, session, queue, and user-supplied development provider credentials. Local browser tests created `browser-…@example.test` accounts; live verification created a separate reviewer account with a random password saved only in ignored `.runtime/reviewer.json`. Its images and cost records come from real PixelForge API calls. No fabricated provider records were inserted into the application database.
 
 Negative automated scenarios intentionally emit test-environment log entries (pricing outage, quarantined snapshot, mismatched identity). These are expected test evidence, not successful live provider requests. Inspect the log environment and timestamp when diagnosing errors.
 
-Bonus admin reporting and wallet features remain unimplemented because real core integration validation is still awaiting credentials. The operator-only reconciliation CLI is implemented and tested with exact fixture totals.
+Bonus admin reporting and wallet features remain unimplemented while public callback/deployment validation is outstanding. The operator-only reconciliation CLI is implemented and passed both fixture and real provider checks.

@@ -79,8 +79,7 @@ const selected = (href: string) =>
         <div class="user-row">
           <span class="user-avatar">{{ user.name.slice(0, 1).toUpperCase() }}</span>
           <div>
-            <strong>{{ user.name }}</strong
-            ><small>Personal account</small>
+            <strong>{{ user.name }}</strong><small>Personal account</small>
           </div>
           <button
             class="icon-button"
